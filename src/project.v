@@ -32,4 +32,8 @@ module tt_um_example (
   assign uio_oe = {8{we}};
   assign uo_out[4] = we;
 
+  wire [7:0] unused;
+  assign unused = { ena, clk, rst_n, ui_in[7:3] };
+  assign uo_out[7:6] = 2'b0;
+
 endmodule

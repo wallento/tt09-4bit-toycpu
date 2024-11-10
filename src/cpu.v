@@ -63,6 +63,7 @@ module cpu(
     assign m1 = ~ind;
 
     reg [3:0] accu;
+    assign data_out = { accu, 4'b0 };
     reg carry;
 
     reg [3:0] alu;

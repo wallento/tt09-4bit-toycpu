@@ -17,7 +17,7 @@ module scan
     end
 
     generate
-        if (CHAIN == 0) begin
+        if (CHAIN == 0) begin : mux
             reg [4:0] count;
 
             always @(posedge clk) begin
@@ -29,7 +29,7 @@ module scan
             end
 
             assign scan_out = scan_data[count];
-        end else begin
+        end else begin : chain
             reg [18:0] chain;
 
             always @(posedge clk) begin
