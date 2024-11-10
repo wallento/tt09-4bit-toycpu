@@ -3,8 +3,40 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles
+from cocotb.triggers import ClockCycles, Timer
+from cocotb.binary import BinaryValue
+from cocotb.types import LogicArray, Range, Logic
 
+async def fetch(dut, inst, data):
+    #assert dut.uio_oe == "00000000"
+    dut.uio_in.value = LogicArray(inst + data)
+    await ClockCycles(dut.clk, 10)    
+    dut.ui_in[0].value = 1
+    await ClockCycles(dut.clk, 10)
+
+async def scan(dut):
+    data = LogicArray("x"*19)
+    dut.ui_in[3].value = 1
+    await ClockCycles(dut.clk, 10)
+    for i in range(0,19):
+        await ClockCycles(dut.clk, 10)
+        dut.ui_in[2].value = 1
+        await ClockCycles(dut.clk, 10)
+        dut.ui_in[3].value = 0
+        try:
+            data[i] = dut.uo_out[5].value.integer
+        except ValueError:
+            data[i] = 0
+        dut.ui_in[2].value = 0
+    return {
+        "instruction_register": data[18:15].binstr,
+        "data_register": data[14:11].binstr,
+        "accumulator": data[10:7].binstr,
+        "C": data[6:6].binstr,
+        "Z": data[5:5].binstr,
+        "N": data[4:4].binstr,
+        "program_counter": data[3:0].binstr
+    }
 
 @cocotb.test()
 async def test_project(dut):
@@ -25,16 +57,47 @@ async def test_project(dut):
 
     dut._log.info("Test project behavior")
 
-    # Set the input values you want to test
-    dut.ui_in.value = 20
-    dut.uio_in.value = 30
+    # Reset
+    dut._log.info("CPU Reset")
+    dut.ui_in[1].value = 1
+    await ClockCycles(dut.clk, 10)
+    dut.ui_in[0].value = 1
+    await ClockCycles(dut.clk, 10)
+    dut.ui_in[1].value = 0
+    await ClockCycles(dut.clk, 10)
+    dut.ui_in[0].value = 0
+    
+    # Test
+    await fetch(dut, inst="0001", data="0011")
+    print(await scan(dut))
+    await ClockCycles(dut.clk, 10)    
+    dut.ui_in[0].value = 0
+    await ClockCycles(dut.clk, 10)    
+    print(await scan(dut))
 
-    # Wait for one clock cycle to see the output values
-    await ClockCycles(dut.clk, 1)
+    await fetch(dut, inst="0100", data="1111")
+    print(await scan(dut))
+    await ClockCycles(dut.clk, 10)    
+    dut.ui_in[0].value = 0
+    await ClockCycles(dut.clk, 10)    
+    print(await scan(dut))
 
-    # The following assersion is just an example of how to check the output values.
-    # Change it to match the actual expected output of your module:
-    assert dut.uo_out.value == 50
 
-    # Keep testing the module by changing the input values, waiting for
-    # one or more clock cycles, and asserting the expected output values.
+    await fetch(dut, inst="0011", data="1111")
+    print(await scan(dut))
+    await ClockCycles(dut.clk, 10)
+    assert dut.uo_out[4].value == 1
+    dut.ui_in[4].value = 1
+    await ClockCycles(dut.clk, 10)
+    assert dut.uio_out.value == "00000010"
+    dut.ui_in[4].value = 1
+    await ClockCycles(dut.clk, 10)
+    dut.ui_in[0].value = 0
+    await ClockCycles(dut.clk, 10)    
+    print(await scan(dut))
+
+
+
+    
+
+

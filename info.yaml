@@ -26,9 +26,9 @@ pinout:
   # Inputs
   ui[0]: "usr_clk"
   ui[1]: "usr_rst"
-  ui[2]: "scan_en"
-  ui[3]: ""
-  ui[4]: ""
+  ui[2]: "scan_clk"
+  ui[3]: "scan_en"
+  ui[4]: "mem_grant"
   ui[5]: ""
   ui[6]: ""
   ui[7]: ""

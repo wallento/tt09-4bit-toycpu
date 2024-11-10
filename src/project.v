@@ -21,7 +21,8 @@ module tt_um_wallento_4bit_toycpu (
   cpu u_cpu(
     .clk (ui_in[0]),
     .rst (ui_in[1]),
-    .scan_en (ui_in[2]),
+    .scan_clk (ui_in[2]),
+    .scan_en (ui_in[3]),
     .scan_out (uo_out[5]),
     .addr (uo_out[3:0]),
     .data_out (uio_out),
@@ -29,7 +30,7 @@ module tt_um_wallento_4bit_toycpu (
     .we (we)
   );
 
-  assign uio_oe = {8{we}};
+  assign uio_oe = {8{we & ui_in[4]}};
   assign uo_out[4] = we;
 
   wire [7:0] unused;

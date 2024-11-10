@@ -9,19 +9,12 @@ module scan
 
     input [18:0] scan_data
 );
-
-    reg last_en;
-
-    always @(posedge clk) begin
-        last_en <= en;
-    end
-
     generate
         if (CHAIN == 0) begin : mux_impl
             reg [4:0] count;
 
             always @(posedge clk) begin
-                if (en & !last_en) begin
+                if (en) begin
                     count <= 0;
                 end else begin
                     count <= count + 1;
@@ -33,7 +26,7 @@ module scan
             reg [18:0] chain;
 
             always @(posedge clk) begin
-                if (en & !last_en) begin
+                if (en) begin
                     chain <= scan_data;
                 end else begin
                     chain[17:0] <= chain[18:1];

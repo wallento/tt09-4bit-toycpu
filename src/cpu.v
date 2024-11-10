@@ -1,6 +1,7 @@
 module cpu(
     input clk,
     input rst,
+    input scan_clk,
     input scan_en,
 
     output scan_out,
@@ -29,15 +30,17 @@ module cpu(
 
     reg [3:0] instruction_register;
     reg [3:0] data_register;
+    reg [3:0] accu;
+    reg [3:0] program_counter;
+    reg C, Z, N;
 
     always @(posedge clk) begin
-        if (!scan_en) begin
-            instruction_register <= instruction_bus;
-            data_register <= data_bus;
-        end
+        instruction_register <= instruction_bus;
+        data_register <= data_bus;
     end
 
     wire nop, lda, sta, add, sub, jmp, brz, brc, brn, ind;
+    wire ld, e, k1, k0, m2, m1;
 
     assign nop = (instruction_register == NOP);
     assign lda = (instruction_register == LDA) || (instruction_register == LDA_IND);
@@ -52,7 +55,6 @@ module cpu(
                  (instruction_register == ADD_IND) ||
                  (instruction_register == SUB_IND);
 
-    wire ld, e, k1, k0, m2, m1;
 
     assign ld = lda;
     assign e = lda | add | sub;
@@ -62,7 +64,6 @@ module cpu(
     assign m2 = ~clk;
     assign m1 = ~ind;
 
-    reg [3:0] accu;
     assign data_out = { 4'b0, accu };
     reg carry;
 
@@ -73,7 +74,7 @@ module cpu(
     assign operand = m1 ? data_register : data_bus;
 
     always @(negedge clk) begin
-        if (!scan_en & e) begin
+        if (e) begin
             accu <= ld ? operand : alu;
             carry <= c;
         end
@@ -87,15 +88,12 @@ module cpu(
         end
     end
 
-    reg C, Z, N;
-
     always @(posedge clk) begin
         C <= carry;
         Z <= ~(|accu);
         N <= accu[3];
     end
 
-    reg [3:0] program_counter;
 
     always @(negedge clk) begin
         if (rst) begin
@@ -114,7 +112,7 @@ module cpu(
     assign addr = m2 ? program_counter : data_register;
 
     scan u_scan(
-        .clk (clk),
+        .clk (scan_clk),
         .en (scan_en),
         .scan_out(scan_out),
 
