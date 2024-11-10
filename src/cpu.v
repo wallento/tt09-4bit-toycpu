@@ -24,8 +24,8 @@ module cpu(
     localparam BRN = 4'b1011;
 
 
-    wire [3:0] data_bus = data_in[7:4];
-    wire [3:0] instruction_bus = data_in[3:0];
+    wire [3:0] data_bus = data_in[3:0];
+    wire [3:0] instruction_bus = data_in[7:4];
 
     reg [3:0] instruction_register;
     reg [3:0] data_register;
@@ -63,7 +63,7 @@ module cpu(
     assign m1 = ~ind;
 
     reg [3:0] accu;
-    assign data_out = { accu, 4'b0 };
+    assign data_out = { 4'b0, accu };
     reg carry;
 
     reg [3:0] alu;
